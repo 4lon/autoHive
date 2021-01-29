@@ -1,5 +1,6 @@
 from win32com.client import Dispatch, GetActiveObject, gencache, constants
 
+
 def main():
     try:
         invApp = GetActiveObject('Inventor.Application')
@@ -65,6 +66,7 @@ def main():
     # Close Document and Inventor
     # invPartDoc.Close(SkipSave=True)
     # invApp.Quit()
+
 
 if __name__ == '__main__':
     main()
