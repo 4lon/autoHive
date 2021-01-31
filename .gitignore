@@ -1,9 +1,6 @@
 # The cad models for this project are not designed by me and therefor I will not distribute them, please check intructions to find the source
 models
 
-# To work on this i needed to run the generate comman file function which creates a huge text document, you can generate it yourself if you would like, otherwise it's unnecessary
-commands.txt
-
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm,windows
 
