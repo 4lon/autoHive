@@ -3,7 +3,7 @@
 
 ## Steps
 ### 0. Purchase
-This project is built of Daniel O'Connell's Hive Evo design, this script will not work without the relevant cad files when you purchase his design: https://cults3d.com/en/3d-model/home/the-hive-evo
+This project is built of Daniel O'Connell's Hive Evo design, this script will not work without the relevant cad files received when you purchase his design: https://cults3d.com/en/3d-model/home/the-hive-evo
 
 ### 1. Installation
 Run this script to install the necessary dependency:

@@ -1,5 +1,37 @@
 from win32com.client import Dispatch, GetActiveObject, gencache, constants
+from os import getcwd
+from pynput.keyboard import Key, Controller
+import win32gui
+import re
 
+class WindowMgr:
+    """Encapsulates some calls to the winapi for window management"""
+
+    def __init__(self):
+        """Constructor"""
+        self._handle = None
+
+    def find_window(self, class_name, window_name=None):
+        """find a window by its class_name"""
+        self._handle = win32gui.FindWindow(class_name, window_name)
+
+    def _window_enum_callback(self, hwnd, wildcard):
+        """Pass to win32gui.EnumWindows() to check all the opened windows"""
+        if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) is not None:
+            self._handle = hwnd
+
+    def find_window_wildcard(self, wildcard):
+        """find a window whose title matches the wildcard regex"""
+        self._handle = None
+        win32gui.EnumWindows(self._window_enum_callback, wildcard)
+
+    def set_foreground(self):
+        """put the window in the foreground"""
+        win32gui.SetForegroundWindow(self._handle)
+
+    def set_focus(self):
+        """put the window in the foreground"""
+        win32gui.SetFocus(self._handle)
 
 def generate_command_file(invApp):
     ControlDefs = invApp.CommandManager.ControlDefinitions
@@ -15,57 +47,27 @@ def generate_command_file(invApp):
     commandFile.close()
 
 
-def main():
-    # Create a new part
+def main(invApp):
     invDoc = invApp.Documents.Add(constants.kPartDocumentObject, "", True)
 
     # Casting Document to PartDocument
-    # invPartDoc = mod.PartDocument(invDoc)
+    invPartDoc = mod.PartDocument(invDoc)
 
-    # compdef = invPartDoc.ComponentDefinition
+    #Trigger inventor import panel
+    ControlMgr = invApp.CommandManager
+    ControlDefs = ControlMgr.ControlDefinitions
+    ControlDefs.Item("AppFileImportNewCmd").Execute2(False)
 
-    # # Create a sketch
-    # xyPlane = compdef.WorkPlanes.Item(3)
-    # sketch = compdef.Sketches.Add(xyPlane)
-    #
-    # # Set Geometry variables
-    # tg = invApp.TransientGeometry
-    # lines = sketch.SketchLines
-    #
-    # # Draw Triangle
-    # line1 = lines.AddByTwoPoints(tg.CreatePoint2d(0, 0), tg.CreatePoint2d(4, 0))
-    # line2 = lines.AddByTwoPoints(line1.EndSketchPoint, tg.CreatePoint2d(4, 3))
-    # line3 = lines.AddByTwoPoints(line2.EndSketchPoint, line1.StartSketchPoint)
-    #
-    # # Draw slotted hole
-    # # Create the sketch points.
-    # points = sketch.SketchPoints
-    # arcs = sketch.SketchArcs
-    # pointArray = []
-    # pointArray.append(points.Add(tg.CreatePoint2d(0, 1), False))
-    # pointArray.append(points.Add(tg.CreatePoint2d(0, 0), False))
-    # pointArray.append(points.Add(tg.CreatePoint2d(0, -1), False))
-    # pointArray.append(points.Add(tg.CreatePoint2d(4, -1), False))
-    # pointArray.append(points.Add(tg.CreatePoint2d(4, 0), False))
-    # pointArray.append(points.Add(tg.CreatePoint2d(4, 1), False))
-    # # Draw the geometry.
-    # arc1 = arcs.AddByCenterStartEndPoint(
-    #     pointArray[1], pointArray[0], pointArray[2])
-    # line1 = lines.AddByTwoPoints(pointArray[2], pointArray[3])
-    # arc2 = arcs.AddByCenterStartEndPoint(
-    #     pointArray[4], pointArray[3], pointArray[5])
-    # line2 = lines.AddByTwoPoints(pointArray[5], pointArray[0])
-    #
-    # # Draw Rectangle
-    # rectangle = lines.AddAsTwoPointRectangle(
-    #     tg.CreatePoint2d(0, 0), tg.CreatePoint2d(4, 3))
-    #
-    # # Extrude
-    # profile = sketch.Profiles.AddForSolid()
-    # extrudeDef = compdef.Features.ExtrudeFeatures.CreateExtrudeDefinition(
-    #     profile, constants.kJoinOperation)
-    # extrudeDef.SetDistanceExtent(1, constants.kNegativeExtentDirection)
-    # extrude = compdef.Features.ExtrudeFeatures.Add(extrudeDef)
+    #Make inventor windows focus so it can type
+    w = WindowMgr()
+    w.find_window_wildcard(".*Autodesk Inventor Professional 2021.*")
+    w.set_foreground()
+
+    #Write in model name and import
+    keyboard = Controller()
+    cwd = getcwd()
+    keyboard.type(cwd + "\models\male.stp\n")
+    ControlDefs.Item("AppContextual_OKCmd").Execute2(False)
 
     # Close Document and Inventor
     # invPartDoc.Close(SkipSave=True)
