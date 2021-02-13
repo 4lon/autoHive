@@ -1,12 +1,13 @@
 from os import getcwd
 import sys
 from math import cos, sin, radians
+from gui import gui
 
 FREECADPATH = 'C:\\Program Files\\FreeCAD 0.18\\bin'  # path to your FreeCAD.so or FreeCAD.dll file
 sys.path.append(FREECADPATH)
 
 
-def main():
+def demoHiveCreator():
     try:
         import FreeCAD
         import Import
@@ -20,8 +21,11 @@ def main():
 
         # faces = ['male', 'female', 'male', 'female', 'male', 'female', 'male', 'female', 'male', 'female']
         # angles = [60, -60, -60, -60, -60, 60, -60, -60, -60, -60]
-        faces = ['male', 'male', 'female', 'female']
-        angles = [-120, -60, -120, -60]
+        # faces = ['male', 'male', 'female', 'female']
+        # angles = [-120, -60, -120, -60]
+        faces = ['male', 'female', 'male', 'female', 'male', 'female', 'male', 'female', 'male', 'female', 'male',
+                 'female', 'male', 'female', 'male', 'female', 'male', 'female']
+        angles = [60, -60, -60, 60, 60, -60, -60, -60, -60, 60, -60, -60, 60, 60, -60, -60, -60, -60]
 
         i = 0
         angle = 0
@@ -52,4 +56,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    gui()
