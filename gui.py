@@ -23,6 +23,9 @@ class Lattice(tk.Canvas):
         self._width = None
         self._height = None
         self._clicked = False
+        self._selected = {}
+        self._colours = {True: '#33D4FF',
+                         False: '#424242'}
 
     def create(self):
         self._width = self.winfo_width()
@@ -57,9 +60,6 @@ class Lattice(tk.Canvas):
     def conv_to_regular(self, x, y):
         return [(x - (self._width / 2)), -(y - (self._height / 2))]
 
-    def select_triangle(self, left_column, right_column, row):
-        print(left_column, right_column, row)
-
     def find_triangle(self, event):
         x, y = self.conv_to_regular(event.x, event.y)
         m1 = self._line_length * sin(radians(60)) / (self._line_length / 2)
@@ -84,12 +84,62 @@ class Lattice(tk.Canvas):
             row = int(ceil(y / (sin(radians(60)) * self._line_length)))
         else:
             row = int(floor(y / (sin(radians(60)) * self._line_length)))
+        return f"{left_column},{right_column},{row}"
 
-        self.select_triangle(left_column, right_column, row)
+    def select_triangle(self, key):
+        if not self._selected.get(key):
+            if self._clicked:
+                self._selected[key] = self.create_polygon(self.find_points(key), fill=self._colours[True])
+        else:
+            if self._clicked:
+                self.itemconfig(self._selected[key], fill=self._colours[True])
+            else:
+                self.delete(self._selected[key])
+                self._selected.pop(key)
+
+    def find_points(self, key):
+        location = key.split(',')
+        for i in range(0, 3, 1):
+            location[i] = int(location[i])
+            if location[i] >= 0:
+                location[i] -= 1
+        if (location[2] % 2) == 0:
+            if (location[0] + location[1]) % 2 == 0:
+                type = 'upper'
+            else:
+                type = 'lower'
+        else:
+            if (location[0] + location[1]) % 2 == 0:
+                type = 'lower'
+            else:
+                type = 'upper'
+        m = [-self._line_length * sin(radians(60)) / (self._line_length / 2),
+             self._line_length * sin(radians(60)) / (self._line_length / 2), 0]
+        c = [0, 0, 0]
+        if type == 'upper':
+            location[0] += 1
+        if type == 'lower':
+            location[1] += 1
+            location[2] += 1
+
+        c[0] = location[0] * 2 * self._line_length * sin(radians(60))
+        c[1] = location[1] * -2 * self._line_length * sin(radians(60))
+        c[2] = location[2] * self._line_length * sin(radians(60))
+
+        return [self.conv_to_canvas((c[2] - c[0]) / m[0], c[2]), self.conv_to_canvas((c[2] - c[1]) / m[1], c[2]),
+                self.conv_to_canvas((c[1] - c[0]) / (m[0] - m[1]), m[0] * (c[1] - c[0]) / (m[0] - m[1]) + c[0])]
 
     def enable(self, event):
-        self._clicked = True
-        self.find_triangle(event)
+        key = self.find_triangle(event)
+        if not self._selected.get(key):
+            self._clicked = True
+        else:
+            self._clicked = False
+        self.select_triangle(key)
+
+    def cont(self, event):
+        key = self.find_triangle(event)
+        self.select_triangle(key)
 
     def disable(self, event):
         self._clicked = False
@@ -99,8 +149,8 @@ def gui():
     root = tk.Tk()
     root.title("autoHive")
 
-    w = 500
-    h = 400
+    w = 800
+    h = 600
     lattice = Lattice(root, width=w, height=h, bg='#121212')
     lattice.pack()
 
@@ -108,7 +158,7 @@ def gui():
     lattice.create()
 
     lattice.bind('<Button-1>', lattice.enable)
-    lattice.bind('<B1-Motion>', lattice.find_triangle)
+    lattice.bind('<B1-Motion>', lattice.cont)
     lattice.bind('<ButtonRelease-1>', lattice.disable)
 
     root.mainloop()
