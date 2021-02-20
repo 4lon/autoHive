@@ -1,4 +1,4 @@
-from math import sin, cos, tan, radians
+from math import sin, tan, radians, floor, ceil
 import tkinter as tk
 from parts import Joint
 
@@ -20,53 +20,79 @@ class Lattice(tk.Canvas):
     def __init__(self, master=None, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self._line_length = 60
+        self._width = None
+        self._height = None
+        self._clicked = False
 
     def create(self):
-        width = self.winfo_width()
-        height = self.winfo_height()
+        self._width = self.winfo_width()
+        self._height = self.winfo_height()
 
-        mid = height / 2
+        mid = self._height / 2
         offset = 0
 
         while offset <= mid:
-            self.create_line(0, mid + offset, width, mid + offset, width=3, fill='#424242')
-            self.create_line(0, mid - offset, width, mid - offset, width=3, fill='#424242')
+            self.create_line(0, mid + offset, self._width, mid + offset, width=3, fill='#424242')
+            self.create_line(0, mid - offset, self._width, mid - offset, width=3, fill='#424242')
             offset += self._line_length * sin(radians(60))
 
-        mid = width / 2
-        mid_width = (height / 2) / tan(radians(60))
+        mid = self._width / 2
+        mid_width = (self._height / 2) / tan(radians(60))
         offset = 0
 
         while offset <= mid + mid_width:
-            self.create_line(mid - mid_width + offset, 0, mid + mid_width + offset, height, width=3, fill='#424242')
-            self.create_line(mid - mid_width - offset, 0, mid + mid_width - offset, height, width=3, fill='#424242')
-            self.create_line(mid - mid_width + offset, height, mid + mid_width + offset, 0, width=3, fill='#424242')
-            self.create_line(mid - mid_width - offset, height, mid + mid_width - offset, 0, width=3, fill='#424242')
+            self.create_line(mid - mid_width + offset, 0, mid + mid_width + offset, self._height, width=3,
+                             fill='#424242')
+            self.create_line(mid - mid_width - offset, 0, mid + mid_width - offset, self._height, width=3,
+                             fill='#424242')
+            self.create_line(mid - mid_width + offset, self._height, mid + mid_width + offset, 0, width=3,
+                             fill='#424242')
+            self.create_line(mid - mid_width - offset, self._height, mid + mid_width - offset, 0, width=3,
+                             fill='#424242')
             offset += self._line_length
 
+    def conv_to_canvas(self, x, y):
+        return [(x + (self._width / 2)), (-y + (self._height / 2))]
 
-def find_triangle(event):
-    w = 500 / 2
-    h = 400 / 2
-    # print(type(event.widget))
-    # event.widget.create_polygon([[0, 0], [0, 100], [100, 0]], fill='#33D4FF')
-    # y = mx + c
-    c = 0
-    # ms = [0, sin(radians(60)), -sin(radians(60))]
-    # for m in ms:
-    #     y = m*(event.x-w) + c
-    # print(y, -(event.y-h))
-    # x = ((event.y - h) - c) / m
-    # side = (event.x - w - x)/abs(event.x - w - x)
-    # print(side)
-    x = event.x - (event.widget.winfo_width() / 2)
-    y = -(event.y - (event.widget.winfo_height() / 2))
+    def conv_to_regular(self, x, y):
+        return [(x - (self._width / 2)), -(y - (self._height / 2))]
 
-    line_length = 60
-    print(y / (line_length * sin(radians(60))))
-    print(x / line_length)
+    def select_triangle(self, left_column, right_column, row):
+        print(left_column, right_column, row)
 
-    # event.widget.create_polygon([[line_length, ]])
+    def find_triangle(self, event):
+        x, y = self.conv_to_regular(event.x, event.y)
+        m1 = self._line_length * sin(radians(60)) / (self._line_length / 2)
+        m2 = -m1
+        c1 = c2 = 0
+
+        initial = side = int((x - ((y - c2) / m2)) / abs(x - ((y - c2) / m2)))
+        while initial == side:
+            c2 += 2 * side * self._line_length * sin(radians(60))
+            side = int((x - ((y - c2) / m2)) / abs(x - ((y - c2) / m2)))
+
+        left_column = (int(c2 / (2 * self._line_length * sin(radians(60)))))
+
+        initial = side = int((x - ((y - c1) / m1)) / abs(x - ((y - c1) / m1)))
+        while initial == side:
+            c1 -= 2 * side * self._line_length * sin(radians(60))
+            side = int((x - ((y - c1) / m1)) / abs(x - ((y - c1) / m1)))
+
+        right_column = (int(-c1 / (2 * self._line_length * sin(radians(60)))))
+
+        if (y / (sin(radians(60)) * self._line_length)) > 0:
+            row = int(ceil(y / (sin(radians(60)) * self._line_length)))
+        else:
+            row = int(floor(y / (sin(radians(60)) * self._line_length)))
+
+        self.select_triangle(left_column, right_column, row)
+
+    def enable(self, event):
+        self._clicked = True
+        self.find_triangle(event)
+
+    def disable(self, event):
+        self._clicked = False
 
 
 def gui():
@@ -81,7 +107,8 @@ def gui():
     root.update()
     lattice.create()
 
-    lattice.bind('<Button-1>', find_triangle)
-    lattice.bind('<B1-Motion>', find_triangle)
+    lattice.bind('<Button-1>', lattice.enable)
+    lattice.bind('<B1-Motion>', lattice.find_triangle)
+    lattice.bind('<ButtonRelease-1>', lattice.disable)
 
     root.mainloop()

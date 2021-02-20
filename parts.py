@@ -29,7 +29,7 @@ class Joint(Part):
         self._location = location
         self._points = []
         self._radius = 5
-        self._id = "j"+str(coords[0])+str(coords[1])
+        self._id = "j" + str(coords[0]) + str(coords[1])
         self._sides = {'E': Side(coords, line_length, canvas, location, 0),
                        'SE': Side(coords, line_length, canvas, location, -60),
                        'SW': Side(coords, line_length, canvas, location, -120)}
@@ -61,8 +61,7 @@ class Side(Part):
             points[i][1] = points[i - 1][1] - sides[i - 1] * sin(radians(angle))
             angle += 90
 
-
-        self._id = "s"+str(angle)+str(coords[0])+str(coords[1])
+        self._id = "s" + str(angle) + str(coords[0]) + str(coords[1])
         self._points = points
 
         super().__init__(coords, canvas)
